@@ -3,17 +3,59 @@ import React, { useEffect, useState } from 'react';
 import { set, useForm } from 'react-hook-form';
 
 
+const modelLocationRanges = {
+    model3: {
+        "front-quarter-driver": { heightRange: [700, 800], widthRange: [2.0, 3.0] },
+        "driver-rear-passenger": { heightRange: [600, 700], widthRange: [2.0, 3.0] },
+        "rear-passenger-quarter": { heightRange: [700, 800], widthRange: [2.5, 3.5] },
+        "front-quarter-passenger": { heightRange: [700, 800], widthRange: [2.5, 3.5] },
+        "front-passenger-rear-passenger": { heightRange: [600, 700], widthRange: [2.5, 3.5] }
+    },
+    modely: {
+        "front-quarter-driver": { heightRange: [750, 850], widthRange: [2.5, 3.5] },
+        "driver-rear-passenger": { heightRange: [650, 750], widthRange: [2.5, 3.5] },
+        "rear-passenger-quarter": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+        "front-quarter-passenger": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+        "front-passenger-rear-passenger": { heightRange: [650, 750], widthRange: [3.0, 4.0] }
+    },
+    modelx: {
+        "front-quarter-driver": { heightRange: [750, 850], widthRange: [2.5, 3.5] },
+        "driver-rear-passenger": { heightRange: [650, 750], widthRange: [2.5, 3.5] },
+        "rear-passenger-quarter": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+        "front-quarter-passenger": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+        "front-passenger-rear-passenger": { heightRange: [650, 750], widthRange: [3.0, 4.0] }
+    },
+    models: {
+        "front-quarter-driver": { heightRange: [750, 850], widthRange: [2.5, 3.5] },
+        "driver-rear-passenger": { heightRange: [650, 750], widthRange: [2.5, 3.5] },
+        "rear-passenger-quarter": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+        "front-quarter-passenger": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+        "front-passenger-rear-passenger": { heightRange: [650, 750], widthRange: [3.0, 4.0] }
+    },
+};
+
 function App() {
     const { register, reset, handleSubmit } = useForm();
-
     const [ widthGap, setWidthGap ] = useState(0);
     const [ widthTolerance, setWidthTolerance ] = useState("")
     const [ gapArea, setGapArea ] = useState(0);
-    const [ gapAreaTolerance, setGapAreaTolerance ] = useState("")
+    const [ gapAreaTolerance, setGapAreaTolerance ] = useState("");
+    const [ result, setResult ] = useState({
+        "Left length": "",
+        "Right length": "",
+        "Top width": "",
+        "Bottom width": ""
+    });
+
+    let heightRange; // (mm)
+    let widthRange; // (mm)
 
     const handleCalculate = (data) => {
-        if (data.model !== "null" && data.location !== "null") {
-            console.log(data);
+        if (data.model && data.location) {
+            // console.log(data);
+            const ranges = modelLocationRanges[data.model][data.location];
+            heightRange = ranges.heightRange;
+            widthRange = ranges.widthRange;
             reset();
             calculatePanelGap(data.leftLength, data.rightLength, data.topWidth, data.bottomWidth);
         } else {
@@ -22,30 +64,40 @@ function App() {
     }
 
     const calculatePanelGap = (L, R, T, B) => {
-        // @TODO: consider the model and location
+        if (checkInRange("Left length", L, heightRange)) return;
+        if (checkInRange("Right length", R, heightRange)) return;
+        if (checkInRange("Top width", T, widthRange)) return;
+        if (checkInRange("Bottom width", B, widthRange)) return;
 
-
+        // check tolerance: the difference between the top and bottom of the gap should be less than 0.5mm
         const thisGap = Math.abs(T - B).toFixed(2);
-
         setWidthGap(thisGap);
-        // check tolerance
         setWidthTolerance(thisGap < 0.5 ? "Pass" : "Reject");
 
-        // get the gap area
-        const gapArea = (parseFloat(T) + parseFloat(B)) * Math.min(L, R) / 2;
-        console.log('gapArea', gapArea);
+        // check tolerance: the gap area should be within (mm²): the average of height range * the average of width range) abs. 0.5 mm²
+        const gapArea = ((parseFloat(T) + parseFloat(B)) * Math.min(L, R) / 2).toFixed(4);
         setGapArea(gapArea);
+        const avgHeight = (heightRange[0] + heightRange[1]) / 2;
+        const avgWidth = (widthRange[0] + widthRange[1]) / 2;
+        const gapAreaTolerance = [(avgHeight * avgWidth) - 0.5, (avgHeight * avgWidth) + 0.5];
+        setGapAreaTolerance(gapArea > gapAreaTolerance[0] && gapArea < gapAreaTolerance[1] ? "Pass" : "Reject");
+    }
 
-        setGapAreaTolerance(gapArea < 40 ? "Pass" : "Reject");
-
+    const checkInRange = (mes, value, range) => {
+        if (value >= range[0] && value <= range[1]) {
+            setResult(result => ({ ...result, [mes]: "Pass" }));
+        } else {
+            setResult(result => ({ ...result, [mes]: "Reject" }));
+        }
     }
 
     useEffect(() => {
-        console.log(widthGap);
-        console.log(widthTolerance);
-        console.log(gapArea);
-        console.log(gapAreaTolerance);
-    }, [widthGap, widthTolerance, gapArea, gapAreaTolerance]);
+        console.log(result);
+        console.log(`widthGap: ${widthGap}mm`);
+        console.log(`widthTolerance: ${widthTolerance}`);
+        console.log(`gapArea: ${gapArea}mm²`);
+        console.log(`gapAreaTolerance: ${gapAreaTolerance}`);
+    }, [result, widthGap, widthTolerance, gapArea, gapAreaTolerance]);
     
 
 
@@ -69,7 +121,7 @@ function App() {
 
                 <div className="form-group">
                     <label for="location" className="tds-form-label">Location of Panel Gap:</label>
-                    <select id="location" name="location" required {...register('location')}>
+                    <select id="location" name="location" required {...register('location', {required: true})}>
                         <option value="null" selected>Please Select a Location..</option>
                         <option value="front-quarter-driver">Front Quarter Panel and Drivers Door</option>
                         <option value="driver-rear-passenger">Drivers Door and Rear Passenger Door</option>
@@ -83,19 +135,19 @@ function App() {
 
                 <div className="grid-container">
                     <div className="form-group">
-                        <label for="right-length" className="tds-form-label">Right Length (cm):</label>
+                        <label for="right-length" className="tds-form-label">Right Length (mm):</label>
                         <input type="number" id="right-length" name="right-length" min="0" step="0.01" required {...register('rightLength')} />
                     </div>
                     <div className="form-group">
-                        <label for="left-length" className="tds-form-label">Left Length (cm):</label>
+                        <label for="left-length" className="tds-form-label">Left Length (mm):</label>
                         <input type="number" id="left-length" name="left-length" min="0" step="0.01" required {...register('leftLength')}/>
                     </div>
                     <div className="form-group">
-                        <label for="top-width" className="tds-form-label">Top of Gap Width (cm):</label>
+                        <label for="top-width" className="tds-form-label">Top of Gap Width (mm):</label>
                         <input type="number" id="top-width" name="top-width" min="0" step="0.01" required {...register('topWidth')}/>
                     </div>
                     <div className="form-group">
-                        <label for="bottom-width" className="tds-form-label">Bottom of Gap Width (cm):</label>
+                        <label for="bottom-width" className="tds-form-label">Bottom of Gap Width (mm):</label>
                         <input type="number" id="bottom-width" name="bottom-width" min="0" step="0.01" required {...register('bottomWidth')} />
                     </div>
                 </div>
