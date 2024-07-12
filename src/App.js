@@ -1,6 +1,6 @@
 import "./App.css";
 import React, { useEffect, useState } from "react";
-import { get, set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 const modelLocationRanges = {
   model3: {
@@ -37,7 +37,7 @@ const modelLocationRanges = {
 };
 
 function App() {
-  const { register, reset, handleSubmit } = useForm();
+  const { register, reset, handleSubmit} = useForm();
   const [widthGap, setWidthGap] = useState(0);
   const [widthTolerance, setWidthTolerance] = useState("");
   const [gapArea, setGapArea] = useState(0);
@@ -56,26 +56,54 @@ function App() {
     alertMessage: "",
   });
 
-  let heightRange; // (mm)
-  let widthRange; // (mm)
-
   // Track if the calculation has been performed
   const [isCalculated, setIsCalculated] = useState(false);
 
+  
   const getStatusMessage = (label, status) => {
+    const cleanStatus = status.replace("Rejected! ", "");
     return (
-      <p style={{ color: status === "Pass" ? "green" : "red" }}>
-        {label}: {status}
+      <p style={{color: "white"}}>
+        {label}: {cleanStatus}
       </p>
-    );
-  };
+    )
+  }
 
   const handleCalculate = (data) => {
-    if (data.model && data.location) {
-      // console.log(data);
-      const ranges = modelLocationRanges[data.model][data.location];
-      heightRange = ranges.heightRange;
-      widthRange = ranges.widthRange;
+    if (!data.model) {
+      setResult((result) => ({
+        ...result,
+        alertMessage: "Please select a model.",
+      }));
+      return;
+    }
+
+    if (!data.location) {
+      setResult((result) => ({
+        ...result,
+        alertMessage: "Please select a location.",
+      }));
+      return;
+    }
+
+    const modelRanges = modelLocationRanges[data.model];
+    if (!modelRanges) {
+      setResult((result) => ({
+        ...result,
+        alertMessage: "Please select model.",
+      }));
+      return;
+    }
+
+    const locationRanges = modelRanges[data.location];
+    if (!locationRanges) {
+      setResult((result) => ({
+        ...result,
+        alertMessage: "Please select location.",
+      }));
+      return;
+    }   
+      
       reset();
       calculatePanelGap(
         data.leftLength,
@@ -83,19 +111,16 @@ function App() {
         data.topWidth,
         data.bottomWidth,
         data.model,
-        data.location        
+        data.location,
+        locationRanges.heightRange,
+        locationRanges.widthRange        
       );
+      
       // set to true after the calculation is performed
       setIsCalculated(true);
-    } else {
-      setResult((result) => ({
-        ...result,
-        alertMessage: "Please select a model / location of the panel gap.",
-      }));
-    }
-  };
+    };
 
-  const calculatePanelGap = (L, R, T, B, model, location) => {
+  const calculatePanelGap = (L, R, T, B, model, location, heightRange, widthRange) => {
     const leftLengthStatus = checkInRange("Left length", L, heightRange);
     const rightLengthStatus = checkInRange("Right length", R, heightRange);
     const topWidthStatus = checkInRange("Top width", T, widthRange);
@@ -104,7 +129,7 @@ function App() {
     // check tolerance: the difference between the top and bottom of the gap should be less than 0.5mm
     const thisGap = Math.abs(T - B).toFixed(2);
     setWidthGap(thisGap);
-    setWidthTolerance(thisGap < 0.5 ? "Pass" : "Reject");
+    setWidthTolerance(thisGap < 5 ? "Pass" : "Reject");
 
     // check tolerance: the gap area should be within (mm²): the average of height range * the average of width range) abs. 0.5 mm²
     const gapArea = (
@@ -115,10 +140,9 @@ function App() {
 
     const avgHeight = (heightRange[0] + heightRange[1]) / 2;
     const avgWidth = (widthRange[0] + widthRange[1]) / 2;
-    // const gapAreaTolerance = [(avgHeight * avgWidth) - 0.5, (avgHeight * avgWidth) + 0.5];
     const gapAreaTolerance = [
-      Math.abs(avgHeight * avgWidth - 0.5),
-      Math.abs(avgHeight * avgWidth + 0.5),
+      Math.abs(avgHeight * avgWidth - 5),
+      Math.abs(avgHeight * avgWidth + 5),
     ];
 
     setGapAreaTolerance(
@@ -126,12 +150,6 @@ function App() {
         ? "Pass"
         : "Reject"
     );
-
-    const hasRejections =
-      leftLengthStatus.startsWith("Reject") ||
-      rightLengthStatus.startsWith("Reject") ||
-      topWidthStatus.startsWith("Reject") ||
-      bottomWidthStatus.startsWith("Reject");
 
     setResult((result) => ({
       ...result,
@@ -142,22 +160,13 @@ function App() {
       topWidth: T,
       bottomWidth: B,
       widthGap: thisGap,
-      widthTolerance: thisGap < 0.5 ? "Pass" : "Reject",
+      widthTolerance: thisGap < 5 ? "Pass" : "Reject",
       gapArea: gapArea,
       gapAreaTolerance:
         gapArea > gapAreaTolerance[0] && gapArea < gapAreaTolerance[1]
           ? "Pass"
           : "Reject",
-
-      // alertMessage: hasRejections
-      //   ? [
-      //       getStatusMessage("Left Length", leftLengthStatus),
-      //       getStatusMessage("Right Length", rightLengthStatus),
-      //       getStatusMessage("Top Width", topWidthStatus),
-      //       getStatusMessage("Bottom Width", bottomWidthStatus),
-      //     ]
-      //   : "",
-
+      
       alertMessage: [
         leftLengthStatus,
         rightLengthStatus,
@@ -165,24 +174,12 @@ function App() {
         bottomWidthStatus
       ].filter((status) => status.startsWith("Reject"))
       .map((status, index) => {
-        const labels = [" Left Length", " Right Length", " Top Width", " Bottom Width"];
+        const labels = ["", "", "", ""];
         return getStatusMessage(labels[index], status);
       }),
     }));
   };
   
-
-  // const checkInRange = (mes, value, range) => {
-  //   if (value >= range[0] && value <= range[1]) {
-  //     setResult((result) => ({ ...result, [mes]: "Pass" }));
-  //   } else {
-  //     setResult((result) => ({
-  //       ...result,
-  //       [mes]: "Reject"`${mes} is out of range (${range[0]} - ${range[1]})`,
-  //     }));
-  //   }
-  // };
-
   const checkInRange = (name, value, range) => {
     if (value < range[0] || value > range[1]) {
       return `Rejected! ${name} out of range (${range[0]} - ${range[1]})`;
@@ -208,11 +205,9 @@ function App() {
               id="model"
               name="model"
               required
-              {...register("model", { required: true })}
+              {...register("model", { required: "Please select a model" })}
             >
-              <option value="null" selected>
-                Please Select a Model..
-              </option>
+              <option value="">Please Select a Model..</option>
               <option value="model3">Model 3</option>
               <option value="modely">Model Y</option>
               <option value="modelx">Model X</option>
@@ -227,10 +222,10 @@ function App() {
             <select
               id="location"
               name="location"
-              required
-              {...register("location", { required: true })}
+              required = "Please select a location"
+              {...register("location", { required: "Please select a location" })}
             >
-              <option value="null" selected>
+              <option value="" selected>
                 Please Select a Location..
               </option>
               <option value="front-quarter-driver">
@@ -318,40 +313,21 @@ function App() {
             </button>
           </div>
         </form>
-        <div>
-          {result.alertMessage && (
-            <div>
-              <h2 className="subheading">Results</h2>
-                <div class="color_box red" > 
-                  <p className="alert-message" style={{ color: "red" }}>
-                    Some dimensions are out of range:
-                  </p>                  
-                  {result.alertMessage}                  
-                </div>
+        
+        {result.alertMessage && result.alertMessage.length > 0 && (
+          <div>
+            <div style={{ backgroundColor: "#C33149", padding: 10, borderRadius: 15 }}>
+              <p className="alert-message" style={{ color: "white", fontWeight: "bold" }}>
+                Some dimensions are out of range
+              </p>
+              {result.alertMessage}
             </div>
-
-            // <div role="alert" className="alert alert-error" >
-            //   {/* <svg
-            //     xmlns="http://www.w3.org/2000/svg"
-            //     className="h-6 w-6 shrink-0 stroke-current"
-            //     fill="none"
-            //     viewBox="0 0 24 24">
-            //     <path
-            //       strokeLinecap="round"
-            //       strokeLinejoin="round"
-            //       strokeWidth="2"
-            //       d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            //   </svg> */}
-            //   <span style={{color: "red"}}>
-            //     <p> Some dimensions are out of range: </p>
-            //     {result.alertMessage}
-            //   </span>
-            // </div>
-
-          )}
-
+          </div>
+        )}
+          
           {isCalculated && (
             <div className="result">
+              <h2 className="subheading">Result</h2>
               <p> Model: {result.model} </p> 
               <p> Location: {result.location} </p>
               <p>
@@ -362,19 +338,18 @@ function App() {
                 Top Width: {result.topWidth} mm, Bottom Width:{" "}
                 {result.bottomWidth} mm
               </p>
-              <p>
-                Width Gap: {widthGap} mm, Width Tolerance: {widthTolerance}
-              </p>
-              <p>
-                Gap Area: {gapArea} mm², Gap Area Tolerance: {gapAreaTolerance}
-              </p>
+              <p> Width Gap: {widthGap} mm </p>
+              <p style={{fontWeight: "bold"}}> Width Tolerance: {widthTolerance} </p>
+              <p> Gap Area: {gapArea} mm² </p>
+              <p style={{fontWeight: "bold"}}> Gap Area Tolerance: {gapAreaTolerance} </p>
+
             </div>
           )}
         </div>
 
         <div className="image-placeholder"></div>
       </div>
-    </div>
+    
   );
 }
 
