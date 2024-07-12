@@ -4,35 +4,35 @@ import { useForm } from "react-hook-form";
 
 const modelLocationRanges = {
   model3: {
-    "front-quarter-driver": { heightRange: [700, 800], widthRange: [2.0, 3.0] },
-    "driver-rear-passenger": { heightRange: [600, 700], widthRange: [2.0, 3.0] },
-    "rear-passenger-quarter": { heightRange: [700, 800], widthRange: [2.5, 3.5] },
-    "front-quarter-passenger": { heightRange: [700, 800], widthRange: [2.5, 3.5] },
-    "front-passenger-rear-passenger": { heightRange: [600, 700], widthRange: [2.5, 3.5] },
+      "front-quarter-driver": { heightRange: [795, 805], widthRange: [3.0, 9.0] },
+      "driver-rear-passenger": { heightRange: [1295, 1305], widthRange: [3.0, 9.0] },
+      "rear-passenger-quarter": { heightRange: [995, 1005], widthRange: [3.0, 9.0] },
+      "front-quarter-passenger": { heightRange: [795, 805], widthRange: [3.0, 9.0] },
+      "front-passenger-rear-passenger": { heightRange: [1295, 1305], widthRange: [3.0, 9.0] },
   },
 
   modely: {
-    "front-quarter-driver": { heightRange: [750, 850], widthRange: [2.5, 3.5] },
-    "driver-rear-passenger": { heightRange: [650, 750], widthRange: [2.5, 3.5] },
-    "rear-passenger-quarter": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
-    "front-quarter-passenger": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
-    "front-passenger-rear-passenger": { heightRange: [650, 750], widthRange: [3.0, 4.0] },
+      "front-quarter-driver": { heightRange: [845, 855], widthRange: [3.0, 9.0] },
+      "driver-rear-passenger": { heightRange: [1345, 1355], widthRange: [3.0, 9.0] },
+      "rear-passenger-quarter": { heightRange: [1045, 1055], widthRange: [3.0, 9.0] },
+      "front-quarter-passenger": { heightRange: [845, 855], widthRange: [3.0, 9.0] },
+      "front-passenger-rear-passenger": { heightRange: [1345, 1355], widthRange: [3.0, 9.0] },
   },
-  
+
   modelx: {
-    "front-quarter-driver": { heightRange: [750, 850], widthRange: [2.5, 3.5] },
-    "driver-rear-passenger": { heightRange: [650, 750], widthRange: [2.5, 3.5] },
-    "rear-passenger-quarter": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
-    "front-quarter-passenger": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
-    "front-passenger-rear-passenger": { heightRange: [650, 750], widthRange: [3.0, 4.0] },
+      "front-quarter-driver": { heightRange: [1045, 1055], widthRange: [3.0, 9.0] },
+      "driver-rear-passenger": { heightRange: [1545, 1555], widthRange: [3.0, 9.0] },
+      "rear-passenger-quarter": { heightRange: [1245, 1255], widthRange: [3.0, 9.0] },
+      "front-quarter-passenger": { heightRange: [1045, 1055], widthRange: [3.0, 9.0] },
+      "front-passenger-rear-passenger": { heightRange: [1545, 1555], widthRange: [3.0, 9.0] },
   },
 
   models: {
-    "front-quarter-driver": { heightRange: [750, 850], widthRange: [2.5, 3.5] },
-    "driver-rear-passenger": { heightRange: [650, 750], widthRange: [2.5, 3.5] },
-    "rear-passenger-quarter": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
-    "front-quarter-passenger": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
-    "front-passenger-rear-passenger": { heightRange: [650, 750], widthRange: [3.0, 4.0] },
+      "front-quarter-driver": { heightRange: [645, 655], widthRange: [3.0, 9.0] },
+      "driver-rear-passenger": { heightRange: [1145,1155], widthRange: [3.0, 9.0] },
+      "rear-passenger-quarter": { heightRange: [845, 855], widthRange: [3.0, 9.0] },
+      "front-quarter-passenger": { heightRange: [645, 655], widthRange: [3.0, 9.0] },
+      "front-passenger-rear-passenger": { heightRange: [1145, 1155], widthRange: [3.0, 9.0] },
   },
 };
 
@@ -182,7 +182,7 @@ function App() {
   
   const checkInRange = (name, value, range) => {
     if (value < range[0] || value > range[1]) {
-      return `Rejected! ${name} out of range (${range[0]} - ${range[1]})`;
+      return `Rejected! ${name} out of range (${range[0]}mm - ${range[1]}mm)`;
     }
     return "Passed";
   };
@@ -318,7 +318,7 @@ function App() {
           <div>
             <div style={{ backgroundColor: "#C33149", padding: 10, borderRadius: 15 }}>
               <p className="alert-message" style={{ color: "white", fontWeight: "bold" }}>
-                Some dimensions are out of range
+                Some dimension are rejected
               </p>
               {result.alertMessage}
             </div>
