@@ -5,79 +5,34 @@ import { get, set, useForm } from "react-hook-form";
 const modelLocationRanges = {
   model3: {
     "front-quarter-driver": { heightRange: [700, 800], widthRange: [2.0, 3.0] },
-    "driver-rear-passenger": {
-      heightRange: [600, 700],
-      widthRange: [2.0, 3.0],
-    },
-    "rear-passenger-quarter": {
-      heightRange: [700, 800],
-      widthRange: [2.5, 3.5],
-    },
-    "front-quarter-passenger": {
-      heightRange: [700, 800],
-      widthRange: [2.5, 3.5],
-    },
-    "front-passenger-rear-passenger": {
-      heightRange: [600, 700],
-      widthRange: [2.5, 3.5],
-    },
+    "driver-rear-passenger": { heightRange: [600, 700], widthRange: [2.0, 3.0] },
+    "rear-passenger-quarter": { heightRange: [700, 800], widthRange: [2.5, 3.5] },
+    "front-quarter-passenger": { heightRange: [700, 800], widthRange: [2.5, 3.5] },
+    "front-passenger-rear-passenger": { heightRange: [600, 700], widthRange: [2.5, 3.5] },
   },
+
   modely: {
     "front-quarter-driver": { heightRange: [750, 850], widthRange: [2.5, 3.5] },
-    "driver-rear-passenger": {
-      heightRange: [650, 750],
-      widthRange: [2.5, 3.5],
-    },
-    "rear-passenger-quarter": {
-      heightRange: [750, 850],
-      widthRange: [3.0, 4.0],
-    },
-    "front-quarter-passenger": {
-      heightRange: [750, 850],
-      widthRange: [3.0, 4.0],
-    },
-    "front-passenger-rear-passenger": {
-      heightRange: [650, 750],
-      widthRange: [3.0, 4.0],
-    },
+    "driver-rear-passenger": { heightRange: [650, 750], widthRange: [2.5, 3.5] },
+    "rear-passenger-quarter": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+    "front-quarter-passenger": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+    "front-passenger-rear-passenger": { heightRange: [650, 750], widthRange: [3.0, 4.0] },
   },
+  
   modelx: {
     "front-quarter-driver": { heightRange: [750, 850], widthRange: [2.5, 3.5] },
-    "driver-rear-passenger": {
-      heightRange: [650, 750],
-      widthRange: [2.5, 3.5],
-    },
-    "rear-passenger-quarter": {
-      heightRange: [750, 850],
-      widthRange: [3.0, 4.0],
-    },
-    "front-quarter-passenger": {
-      heightRange: [750, 850],
-      widthRange: [3.0, 4.0],
-    },
-    "front-passenger-rear-passenger": {
-      heightRange: [650, 750],
-      widthRange: [3.0, 4.0],
-    },
+    "driver-rear-passenger": { heightRange: [650, 750], widthRange: [2.5, 3.5] },
+    "rear-passenger-quarter": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+    "front-quarter-passenger": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+    "front-passenger-rear-passenger": { heightRange: [650, 750], widthRange: [3.0, 4.0] },
   },
+
   models: {
     "front-quarter-driver": { heightRange: [750, 850], widthRange: [2.5, 3.5] },
-    "driver-rear-passenger": {
-      heightRange: [650, 750],
-      widthRange: [2.5, 3.5],
-    },
-    "rear-passenger-quarter": {
-      heightRange: [750, 850],
-      widthRange: [3.0, 4.0],
-    },
-    "front-quarter-passenger": {
-      heightRange: [750, 850],
-      widthRange: [3.0, 4.0],
-    },
-    "front-passenger-rear-passenger": {
-      heightRange: [650, 750],
-      widthRange: [3.0, 4.0],
-    },
+    "driver-rear-passenger": { heightRange: [650, 750], widthRange: [2.5, 3.5] },
+    "rear-passenger-quarter": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+    "front-quarter-passenger": { heightRange: [750, 850], widthRange: [3.0, 4.0] },
+    "front-passenger-rear-passenger": { heightRange: [650, 750], widthRange: [3.0, 4.0] },
   },
 };
 
@@ -126,7 +81,9 @@ function App() {
         data.leftLength,
         data.rightLength,
         data.topWidth,
-        data.bottomWidth
+        data.bottomWidth,
+        data.model,
+        data.location        
       );
       // set to true after the calculation is performed
       setIsCalculated(true);
@@ -138,7 +95,7 @@ function App() {
     }
   };
 
-  const calculatePanelGap = (L, R, T, B) => {
+  const calculatePanelGap = (L, R, T, B, model, location) => {
     const leftLengthStatus = checkInRange("Left length", L, heightRange);
     const rightLengthStatus = checkInRange("Right length", R, heightRange);
     const topWidthStatus = checkInRange("Top width", T, widthRange);
@@ -178,8 +135,8 @@ function App() {
 
     setResult((result) => ({
       ...result,
-      // model: data.model,
-      // location: data.location,
+      model: model,
+      location: location,
       leftLength: L,
       rightLength: R,
       topWidth: T,
@@ -191,16 +148,29 @@ function App() {
         gapArea > gapAreaTolerance[0] && gapArea < gapAreaTolerance[1]
           ? "Pass"
           : "Reject",
-      alertMessage: hasRejections
-        ? [
-            getStatusMessage("left Length", leftLengthStatus),
-            getStatusMessage("right Length", rightLengthStatus),
-            getStatusMessage("top Width", topWidthStatus),
-            getStatusMessage("bottom Width", bottomWidthStatus),
-          ]
-        : "",
+
+      // alertMessage: hasRejections
+      //   ? [
+      //       getStatusMessage("Left Length", leftLengthStatus),
+      //       getStatusMessage("Right Length", rightLengthStatus),
+      //       getStatusMessage("Top Width", topWidthStatus),
+      //       getStatusMessage("Bottom Width", bottomWidthStatus),
+      //     ]
+      //   : "",
+
+      alertMessage: [
+        leftLengthStatus,
+        rightLengthStatus,
+        topWidthStatus,
+        bottomWidthStatus
+      ].filter((status) => status.startsWith("Reject"))
+      .map((status, index) => {
+        const labels = [" Left Length", " Right Length", " Top Width", " Bottom Width"];
+        return getStatusMessage(labels[index], status);
+      }),
     }));
   };
+  
 
   // const checkInRange = (mes, value, range) => {
   //   if (value >= range[0] && value <= range[1]) {
@@ -215,9 +185,9 @@ function App() {
 
   const checkInRange = (name, value, range) => {
     if (value < range[0] || value > range[1]) {
-      return `Reject: ${name} out of range`;
+      return `Rejected! ${name} out of range (${range[0]} - ${range[1]})`;
     }
-    return "Pass";
+    return "Passed";
   };
 
   useEffect(() => {
@@ -351,20 +321,39 @@ function App() {
         <div>
           {result.alertMessage && (
             <div>
-              <h2 className="subheading">Calculation Results</h2>
-
-              <p className="alert-message" style={{ color: "red" }}>
-                Some dimensions are out of range:
-              </p>
-              {result.alertMessage}
+              <h2 className="subheading">Results</h2>
+                <div class="color_box red" > 
+                  <p className="alert-message" style={{ color: "red" }}>
+                    Some dimensions are out of range:
+                  </p>                  
+                  {result.alertMessage}                  
+                </div>
             </div>
+
+            // <div role="alert" className="alert alert-error" >
+            //   {/* <svg
+            //     xmlns="http://www.w3.org/2000/svg"
+            //     className="h-6 w-6 shrink-0 stroke-current"
+            //     fill="none"
+            //     viewBox="0 0 24 24">
+            //     <path
+            //       strokeLinecap="round"
+            //       strokeLinejoin="round"
+            //       strokeWidth="2"
+            //       d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            //   </svg> */}
+            //   <span style={{color: "red"}}>
+            //     <p> Some dimensions are out of range: </p>
+            //     {result.alertMessage}
+            //   </span>
+            // </div>
+
           )}
 
           {isCalculated && (
             <div className="result">
-              {/* <p>
-              Model: {result.model}, Location: {result.location}
-            </p> */}
+              <p> Model: {result.model} </p> 
+              <p> Location: {result.location} </p>
               <p>
                 Left Length: {result.leftLength} mm, Right Length:{" "}
                 {result.rightLength} mm
