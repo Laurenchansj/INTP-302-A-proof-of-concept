@@ -1,6 +1,6 @@
 import "./App.css";
 import React, { useEffect, useState } from "react";
-import { set, useForm } from "react-hook-form";
+import { get, set, useForm } from "react-hook-form";
 
 const modelLocationRanges = {
   model3: {
@@ -98,6 +98,7 @@ function App() {
     widthTolerance: "",
     gapArea: "",
     gapAreaTolerance: "",
+    alertMessage: "",
   });
 
   let heightRange; // (mm)
@@ -105,6 +106,14 @@ function App() {
 
   // Track if the calculation has been performed
   const [isCalculated, setIsCalculated] = useState(false);
+
+  const getStatusMessage = (label, status) => {
+    return (
+      <p style={{ color: status === "Pass" ? "green" : "red" }}>
+        {label}: {status}
+      </p>
+    );
+  };
 
   const handleCalculate = (data) => {
     if (data.model && data.location) {
@@ -122,15 +131,18 @@ function App() {
       // set to true after the calculation is performed
       setIsCalculated(true);
     } else {
-      alert("Please select a model / location of the panel gap.");
+      setResult((result) => ({
+        ...result,
+        alertMessage: "Please select a model / location of the panel gap.",
+      }));
     }
   };
 
   const calculatePanelGap = (L, R, T, B) => {
-    if (checkInRange("Left length", L, heightRange)) return;
-    if (checkInRange("Right length", R, heightRange)) return;
-    if (checkInRange("Top width", T, widthRange)) return;
-    if (checkInRange("Bottom width", B, widthRange)) return;
+    const leftLengthStatus = checkInRange("Left length", L, heightRange);
+    const rightLengthStatus = checkInRange("Right length", R, heightRange);
+    const topWidthStatus = checkInRange("Top width", T, widthRange);
+    const bottomWidthStatus = checkInRange("Bottom width", B, widthRange);
 
     // check tolerance: the difference between the top and bottom of the gap should be less than 0.5mm
     const thisGap = Math.abs(T - B).toFixed(2);
@@ -151,13 +163,21 @@ function App() {
       Math.abs(avgHeight * avgWidth - 0.5),
       Math.abs(avgHeight * avgWidth + 0.5),
     ];
+
     setGapAreaTolerance(
       gapArea > gapAreaTolerance[0] && gapArea < gapAreaTolerance[1]
         ? "Pass"
         : "Reject"
     );
 
-    setResult({
+    const hasRejections =
+      leftLengthStatus.startsWith("Reject") ||
+      rightLengthStatus.startsWith("Reject") ||
+      topWidthStatus.startsWith("Reject") ||
+      bottomWidthStatus.startsWith("Reject");
+
+    setResult((result) => ({
+      ...result,
       // model: data.model,
       // location: data.location,
       leftLength: L,
@@ -171,26 +191,33 @@ function App() {
         gapArea > gapAreaTolerance[0] && gapArea < gapAreaTolerance[1]
           ? "Pass"
           : "Reject",
-    });
+      alertMessage: hasRejections
+        ? [
+            getStatusMessage("left Length", leftLengthStatus),
+            getStatusMessage("right Length", rightLengthStatus),
+            getStatusMessage("top Width", topWidthStatus),
+            getStatusMessage("bottom Width", bottomWidthStatus),
+          ]
+        : "",
+    }));
   };
 
-  const checkInRange = (mes, value, range) => {
-    if (value >= range[0] && value <= range[1]) {
-      setResult((prevResult) => ({
-        ...prevResult,
-        [mes]: "Pass",
-        alertMessage: "",
-      }));
-      // return false;
-    } else {
-      alert(`${mes} is out of range (${range[0]} - ${range[1]})`);
-      setResult((prevResult) => ({
-        ...prevResult,
-        [mes]: "Reject",
-        alertMessage: `${mes} is out of range (${range[0]} - ${range[1]})`,
-      }));
-      // return true;
+  // const checkInRange = (mes, value, range) => {
+  //   if (value >= range[0] && value <= range[1]) {
+  //     setResult((result) => ({ ...result, [mes]: "Pass" }));
+  //   } else {
+  //     setResult((result) => ({
+  //       ...result,
+  //       [mes]: "Reject"`${mes} is out of range (${range[0]} - ${range[1]})`,
+  //     }));
+  //   }
+  // };
+
+  const checkInRange = (name, value, range) => {
+    if (value < range[0] || value > range[1]) {
+      return `Reject: ${name} out of range`;
     }
+    return "Pass";
   };
 
   useEffect(() => {
@@ -321,29 +348,40 @@ function App() {
             </button>
           </div>
         </form>
+        <div>
+          {result.alertMessage && (
+            <div>
+              <h2 className="subheading">Calculation Results</h2>
 
-        {isCalculated && (
-          <div className="result">
-            <h2 className="subheading">Calculation Results</h2>
-            {/* <p>
+              <p className="alert-message" style={{ color: "red" }}>
+                Some dimensions are out of range:
+              </p>
+              {result.alertMessage}
+            </div>
+          )}
+
+          {isCalculated && (
+            <div className="result">
+              {/* <p>
               Model: {result.model}, Location: {result.location}
             </p> */}
-            <p>
-              Left Length: {result.leftLength} mm, Right Length:{" "}
-              {result.rightLength} mm
-            </p>
-            <p>
-              Top Width: {result.topWidth} mm, Bottom Width:{" "}
-              {result.bottomWidth} mm
-            </p>
-            <p>
-              Width Gap: {widthGap} mm, Width Tolerance: {widthTolerance}
-            </p>
-            <p>
-              Gap Area: {gapArea} mm², Gap Area Tolerance: {gapAreaTolerance}
-            </p>
-          </div>
-        )}
+              <p>
+                Left Length: {result.leftLength} mm, Right Length:{" "}
+                {result.rightLength} mm
+              </p>
+              <p>
+                Top Width: {result.topWidth} mm, Bottom Width:{" "}
+                {result.bottomWidth} mm
+              </p>
+              <p>
+                Width Gap: {widthGap} mm, Width Tolerance: {widthTolerance}
+              </p>
+              <p>
+                Gap Area: {gapArea} mm², Gap Area Tolerance: {gapAreaTolerance}
+              </p>
+            </div>
+          )}
+        </div>
 
         <div className="image-placeholder"></div>
       </div>
