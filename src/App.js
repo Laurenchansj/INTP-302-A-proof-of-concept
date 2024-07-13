@@ -126,12 +126,12 @@ function App() {
     const topWidthStatus = checkInRange("Top width", T, widthRange);
     const bottomWidthStatus = checkInRange("Bottom width", B, widthRange);
 
-    // check tolerance: the difference between the top and bottom of the gap should be less than 0.5mm
+    // check tolerance: the difference between the top and bottom of the gap should be less than 3mm.
     const thisGap = Math.abs(T - B).toFixed(2);
     setWidthGap(thisGap);
-    setWidthTolerance(thisGap < 5 ? "Pass" : "Reject");
+    setWidthTolerance(thisGap < 3 ? "Pass" : "Reject");
 
-    // check tolerance: the gap area should be within (mm²): the average of height range * the average of width range) abs. 0.5 mm²
+    // check tolerance: the gap area should be within (mm²): the average of height range * the average of width range) abs. 5 mm²
     const gapArea = (
       ((parseFloat(T) + parseFloat(B)) * Math.min(L, R)) /
       2
@@ -160,7 +160,7 @@ function App() {
       topWidth: T,
       bottomWidth: B,
       widthGap: thisGap,
-      widthTolerance: thisGap < 5 ? "Pass" : "Reject",
+      widthTolerance: thisGap < 3 ? "Pass" : "Reject",
       gapArea: gapArea,
       gapAreaTolerance:
         gapArea > gapAreaTolerance[0] && gapArea < gapAreaTolerance[1]
