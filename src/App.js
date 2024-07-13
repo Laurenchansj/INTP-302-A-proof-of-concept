@@ -2,6 +2,9 @@ import "./App.css";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
+// Note 1: the range of the height and width of the panel gap for each model and location is based on our measurement of the actual Tesla Model S car, and estimated for other models and locations.
+// Note 2: both the tolerance for the width gap which is 3mm and the tolerance for the gap area which is 5mm² are estimated by our team.
+
 const modelLocationRanges = {
   model3: {
       "front-quarter-driver": { heightRange: [795, 805], widthRange: [3.0, 9.0] },
