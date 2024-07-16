@@ -15,6 +15,8 @@ The page will reload when you make changes.\
 You may also see any lint errors in the console.
 
 ### `npm install react-hook-form`.
+### `npm install axios`
+### `npm install react-markdown remark-gfm`
 
 ### `npm test`
 
