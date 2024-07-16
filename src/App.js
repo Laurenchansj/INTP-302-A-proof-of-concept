@@ -70,6 +70,21 @@ function App() {
   }]);
   const [loading, setLoading] = useState(false);
   const [userPrompt, setUserPrompt] = useState("");
+  const [chatPrompt, setChatPrompt] = useState("");
+  const [chatBot, setChatBot] = useState(false);
+  const [temp, setTemp] = useState({
+    model: "",
+    location: "",
+    leftLength: "",
+    rightLength: "",
+    topWidth: "",
+    bottomWidth: "",
+    widthGap: "",
+    widthTolerance: "",
+    gapArea: "",
+    gapAreaTolerance: "",
+    alertMessage: "",
+  });
 
   // Track if the calculation has been performed
   const [isCalculated, setIsCalculated] = useState(false);
@@ -119,14 +134,10 @@ function App() {
       return;
     }   
     
-    const resultPrompt = `
-      Here is the height and width tolerance for each model: ${JSON.stringify(modelLocationRanges, null, 2)}. 
-      And we hope the difference between the top and bottom of the gap is less than 3mm.
-      The gap area should be within (mm²): the average of height range * the average of width range) abs. 5 mm².
-      There is note for model: "modely" is model Y, "modelx" is model X, "models" is model S, and "model3" is model 3.
-      Can you help me to check if this is Tesla ${result.model} and the gap located on ${result.location} with the gap dimension as following if they are within the tolerance? 
-      the top of gap width ${result.topWidth}mm, the bottom of gap width ${result.bottomWidth}mm, and the left length ${result.leftLength}, and the right length ${result.rightLength}.`
-    generateAnswer(resultPrompt);
+    setTemp(data);
+    
+    
+
     calculatePanelGap(
       data.leftLength,
       data.rightLength,
@@ -141,7 +152,25 @@ function App() {
     // set to true after the calculation is performed
     setIsCalculated(true);
     reset();
-    };
+  };
+
+  useEffect(() => {
+    const resultPrompt = `
+      Here is the height and width tolerance for each model: ${JSON.stringify(modelLocationRanges, null, 2)}. 
+      And we hope the difference between the top and bottom of the gap is less than 3mm.
+      The gap area should be within (mm²): the average of height range * the average of width range) abs. 5 mm².
+      There is note for model: "modely" is model Y, "modelx" is model X, "models" is model S, and "model3" is model 3.
+      Can you help me to check if this is Tesla ${temp.model} and the gap located on ${temp.location} with the gap dimension as following if they are within the tolerance? 
+      the top of gap width ${temp.topWidth}mm, the bottom of gap width ${temp.bottomWidth}mm, and the left length ${temp.leftLength}, and the right length ${temp.rightLength}.`
+    setChatPrompt(resultPrompt);
+  }, [temp]);
+
+
+  const handleChatBot = () => {
+    console.log(chatPrompt);
+    setChatBot(true);
+    generateAnswer(chatPrompt);
+  }
 
   const calculatePanelGap = (L, R, T, B, model, location, heightRange, widthRange) => {
     const leftLengthStatus = checkInRange("Left length", L, heightRange);
@@ -434,44 +463,50 @@ function App() {
               <p style={{fontWeight: "bold"}}> Width Tolerance: {widthTolerance} </p>
               <p> Gap Area: {gapArea} mm² </p>
               <p style={{fontWeight: "bold"}}> Gap Area Tolerance: {gapAreaTolerance} </p>
-
+              <div className="button-container">
+                <button className="tds-btn" onClick={handleChatBot}>Chat with Gemini</button>
+              </div>
             </div>
           )}
         </div>
 
-        <div className="container chatBot-container">
-          <h2 className="subheading">Chat with Gemini</h2>
-          <div className="chatBot-response">
-            <React.Fragment>
-              {chatResult.length > 1 && chatResult.map((chat, index) => (
-                <React.Fragment key={index}>
-                  {chat.role === "User" ? (
-                    <div className="chatBot-each-response">
-                      <p className="role-tag role-you">You:</p>
-                      <p>{chat.message}</p>
-                    </div>
-                  ): (
-                    <div className="chatBot-each-response">
-                      <div ref={chatRef}></div>
-                      <p className="role-tag role-gemini">Gemini:</p>
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {chat.message}
-                      </ReactMarkdown>
-                    </div>
-                  )}
-                </React.Fragment>
-              ))}
-            </React.Fragment>
-            
-          </div>
-          <div>
-            {loading && <p>Gemini is typing...</p>}
-            <div className="chatBot-input">
-              <input value={userPrompt} onChange={handleUserPrompt} type="text" placeholder="Type your message here" />
-              <button className="tds-btn send-mes-btn" onClick={handleSendUserPrompt}>Send</button>
+
+        { chatBot && (
+          <div className="container chatBot-container">
+            <h2 className="subheading">Chat with Gemini</h2>
+            <div className="chatBot-response">
+              <React.Fragment>
+                {chatResult.length > 1 && chatResult.map((chat, index) => (
+                  <React.Fragment key={index}>
+                    {chat.role === "User" ? (
+                      <div className="chatBot-each-response">
+                        <p className="role-tag role-you">You:</p>
+                        <p>{chat.message}</p>
+                      </div>
+                    ): (
+                      <div className="chatBot-each-response">
+                        <div ref={chatRef}></div>
+                        <p className="role-tag role-gemini">Gemini:</p>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {chat.message}
+                        </ReactMarkdown>
+                      </div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </React.Fragment>
+              
+            </div>
+            <div>
+              {loading && <p>Gemini is typing...</p>}
+              <div className="chatBot-input">
+                <input value={userPrompt} onChange={handleUserPrompt} type="text" placeholder="Type your message here" />
+                <button className="tds-btn send-mes-btn" onClick={handleSendUserPrompt}>Send</button>
+              </div>
             </div>
           </div>
-        </div>
+          )}
+
       </div>
     </div>
     
