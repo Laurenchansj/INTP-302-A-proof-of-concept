@@ -157,7 +157,7 @@ function App() {
   useEffect(() => {
     const resultPrompt = `
       Here is the height and width tolerance for each model: ${JSON.stringify(modelLocationRanges, null, 2)}. 
-      And we hope the difference between the top and bottom of the gap is less than 3mm.
+      And we hope the difference between the top and bottom of the gap is less than 0.3mm.
       The gap area should be within (mm²): the average of height range * the average of width range) abs. 5 mm².
       There is note for model: "modely" is model Y, "modelx" is model X, "models" is model S, and "model3" is model 3.
       Can you help me to check if this is Tesla ${temp.model} and the gap located on ${temp.location} with the gap dimension as following if they are within the tolerance? 
@@ -181,7 +181,7 @@ function App() {
     // check tolerance: the difference between the top and bottom of the gap should be less than 3mm.
     const thisGap = Math.abs(T - B).toFixed(2);
     setWidthGap(thisGap);
-    setWidthTolerance(thisGap < 3 ? "Pass" : "Reject");
+    setWidthTolerance(thisGap < 0.3 ? "Pass" : "Reject");
 
     // check tolerance: the gap area should be within (mm²): the average of height range * the average of width range) abs. 5 mm²
     const gapArea = (
